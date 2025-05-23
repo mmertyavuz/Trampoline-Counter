@@ -1,0 +1,285 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trambolin Yönetimi</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#2196f3" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .edit-panel {
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #cccccc;
+      display: none;
+      margin: 1rem auto;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      background: #eeeeee;
+      text-align: center;
+    }
+    .edit-panel.active {
+      display: block;
+    }
+    .edit-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+      margin: 0.3rem 0;
+    }
+    .edit-row button {
+      margin-left: 0.5rem;
+    }
+    .hide{
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Trambolin Süre Takibi</h1>
+
+  <div class="controls">
+    <label for="count">Trambolin Sayısı: </label>
+    <input type="number" id="count" value="6" min="1" max="8" />
+    <button onclick="createTimers()">Oluştur</button>
+    <button onclick="toggleEditPanel()">Verileri Düzenle</button>
+  </div>
+
+  <div class="edit-panel" id="editPanel">
+    <div id="editList"></div>
+    <button onclick="resetAllCounts()">Hepsini Sıfırla</button>
+    <button onclick="downloadData()">Verileri İndir</button>
+  </div>
+
+  <div class="timers" id="timersContainer"></div>
+
+  <script>
+    const MAX_TIME = 10 * 60;
+    let intervals = {};
+
+    function saveState(id, time, isRunning, startTime = null, endTime = null, duration = null, startCount = 0) {
+      localStorage.setItem(`trambolin_${id}`, JSON.stringify({ time, isRunning, startTime, endTime, duration, startCount }));
+    }
+
+    function loadState(id) {
+      const data = localStorage.getItem(`trambolin_${id}`);
+      if (!data) return { time: MAX_TIME, isRunning: false, startTime: null, endTime: null, duration: MAX_TIME, startCount: 0 };
+      const state = JSON.parse(data);
+      state.time = getRemainingTime(state);
+      return state;
+    }
+
+    function getRemainingTime(state) {
+      if (state.startTime && state.duration) {
+        const elapsed = Math.floor((Date.now() - new Date(state.startTime).getTime()) / 1000);
+        return Math.max(0, state.duration - elapsed);
+      }
+      return state.time;
+    }
+
+    function toggleEditPanel() {
+      const panel = document.getElementById("editPanel");
+      panel.classList.toggle("active");
+      generateEditControls();
+    }
+
+    function generateEditControls() {
+      const list = document.getElementById("editList");
+      const count = parseInt(document.getElementById("count").value);
+      list.innerHTML = "";
+      for (let i = 0; i < count; i++) {
+        const state = loadState(i);
+        const row = document.createElement("div");
+        row.className = "edit-row";
+        row.innerHTML = `
+          Trambolin ${i + 1} - Başlatma: <span id="editCount_${i}">${state.startCount || 0}</span>
+          <button onclick="adjustCount(${i}, 1)">+1</button>
+          <button onclick="adjustCount(${i}, -1)">-1</button>
+        `;
+        list.appendChild(row);
+      }
+    }
+
+    function adjustCount(id, delta) {
+      const state = loadState(id);
+      state.startCount = Math.max(0, (state.startCount || 0) + delta);
+      saveState(id, state.time, state.isRunning, state.startTime, state.endTime, state.duration, state.startCount);
+      updateDisplay(id);
+      document.getElementById(`editCount_${id}`).textContent = state.startCount;
+    }
+
+    function resetAllCounts() {
+      const count = parseInt(document.getElementById("count").value);
+      for (let i = 0; i < count; i++) {
+        const state = loadState(i);
+        state.startCount = 0;
+        saveState(i, state.time, state.isRunning, state.startTime, state.endTime, state.duration, state.startCount);
+        updateDisplay(i);
+        const label = document.getElementById(`editCount_${i}`);
+        if (label) label.textContent = "0";
+      }
+    }
+
+    function downloadData() {
+      const count = parseInt(document.getElementById("count").value);
+      const data = {};
+      for (let i = 0; i < count; i++) {
+        data[`Trambolin_${i + 1}`] = loadState(i);
+      }
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "trambolin_verileri.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function updateDisplay(id) {
+      const el = document.getElementById(`timer_${id}`);
+      const state = loadState(id);
+      el.textContent = formatTime(state.time);
+      document.getElementById(`startTime_${id}`).textContent = formatClock(state.startTime);
+      document.getElementById(`endTime_${id}`).textContent = formatClock(state.endTime);
+      document.getElementById(`startCount_${id}`).textContent = state.startCount || 0;
+
+      const card = document.getElementById(`card_${id}`);
+      const startBtn = card.querySelector(".start");
+      const pauseBtn = card.querySelector(".pause");
+      const resetBtn = card.querySelector(".reset");
+
+      if (state.time <= 0) {
+        card.className = "timer-card expired";
+        startBtn.textContent = "Başlat";
+        startBtn.disabled = false;
+        pauseBtn.disabled = true;
+        resetBtn.disabled = false;
+      } else if (state.isRunning) {
+        card.className = "timer-card active";
+        startBtn.textContent = "Başlat";
+        startBtn.disabled = true;
+        pauseBtn.disabled = false;
+        resetBtn.disabled = false;
+      } else {
+        card.className = "timer-card idle";
+        startBtn.textContent = state.startTime ? "Devam Et" : "Başlat";
+        startBtn.disabled = false;
+        pauseBtn.disabled = true;
+        resetBtn.disabled = true;
+      }
+    }
+
+    function formatTime(sec) {
+      const m = String(Math.floor(sec / 60)).padStart(2, '0');
+      const s = String(sec % 60).padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function formatClock(dateStr) {
+      if (!dateStr) return "-";
+      const date = new Date(dateStr);
+      return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    }
+
+    function startTimer(id) {
+      clearInterval(intervals[id]);
+      let state = loadState(id);
+
+      if (state.time <= 0) return;
+
+      const now = new Date();
+      if (!state.startTime) {
+        state.startTime = now.toISOString();
+        state.duration = state.time;
+        state.endTime = new Date(now.getTime() + state.time * 1000).toISOString();
+        state.startCount = (state.startCount || 0) + 1;
+      }
+
+      state.isRunning = true;
+      saveState(id, state.time, state.isRunning, state.startTime, state.endTime, state.duration, state.startCount);
+      updateDisplay(id);
+
+      intervals[id] = setInterval(() => {
+        const nowState = loadState(id);
+        nowState.time = getRemainingTime(nowState);
+
+        if (nowState.time <= 0) {
+          clearInterval(intervals[id]);
+          nowState.time = 0;
+          nowState.isRunning = false;
+          playBeep();
+          alert(`Trambolin ${id + 1}'in süresi doldu!`);
+        }
+
+        saveState(id, nowState.time, nowState.isRunning, nowState.startTime, nowState.endTime, nowState.duration, nowState.startCount);
+        updateDisplay(id);
+      }, 1000);
+    }
+
+    function pauseTimer(id) {
+      clearInterval(intervals[id]);
+      let state = loadState(id);
+      state.isRunning = false;
+      saveState(id, state.time, false, state.startTime, state.endTime, state.duration, state.startCount);
+      updateDisplay(id);
+    }
+
+    function resetTimer(id) {
+      clearInterval(intervals[id]);
+      const state = loadState(id);
+      saveState(id, MAX_TIME, false, null, null, MAX_TIME, state.startCount);
+      updateDisplay(id);
+    }
+
+    function createTimers() {
+      const container = document.getElementById("timersContainer");
+      container.innerHTML = "";
+      const count = parseInt(document.getElementById("count").value);
+
+      for (let i = 0; i < count; i++) {
+        const state = loadState(i);
+        const card = document.createElement("div");
+        card.className = "timer-card";
+        card.id = `card_${i}`;
+        card.innerHTML = `
+          <h2>Trambolin ${i + 1}</h2>
+          <div id="timer_${i}" class="time">${formatTime(state.time)}</div>
+          <div class="info">Başlangıç: <span id="startTime_${i}">${formatClock(state.startTime)}</span></div>
+          <div class="info">Bitiş: <span id="endTime_${i}">${formatClock(state.endTime)}</span></div>
+          <div class="info">Toplam Başlatma: <span id="startCount_${i}">${state.startCount || 0}</span></div>
+          <button class="start" onclick="startTimer(${i})">Başlat</button>
+          <button class="pause hide" onclick="pauseTimer(${i})">Durdur</button>
+          <button class="reset" onclick="resetTimer(${i})">Sıfırla</button>
+        `;
+        container.appendChild(card);
+        updateDisplay(i);
+
+        if (state.isRunning) startTimer(i);
+      }
+    }
+
+    function playBeep() {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = 880;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      gain.gain.setValueAtTime(1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 1);
+    }
+
+    window.addEventListener("load", createTimers);
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
+</body>
+</html>
