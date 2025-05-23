@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Uygulama Rehberi</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f7f7f7;
+      padding: 2rem;
+      line-height: 1.6;
+      color: #333;
+    }
+    h1, h2 {
+      color: #1976d2;
+    }
+    h2 {
+      margin-top: 2rem;
+    }
+    p, li {
+      font-size: 1rem;
+    }
+    ul {
+      margin-left: 1.5rem;
+    }
+    .back-button {
+      display: block;
+      width: fit-content;
+      margin: 2rem auto 0;
+      background-color: #2196f3;
+      color: white;
+      padding: 0.6rem 1.2rem;
+      text-decoration: none;
+      border-radius: 0.4rem;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Trambolin Süre Takibi - Kullanıcı Rehberi</h1>
+
+  <p>Bu uygulama, bir eğlence merkezinde yer alan trambolinlerin kullanım süresini takip etmek ve kullanıcı geçişlerini kolaylaştırmak amacıyla geliştirilmiştir.</p>
+
+  <h2>🔧 Özellikler</h2>
+  <ul>
+    <li>6 ila 8 arasında trambolin için zamanlayıcı oluşturabilirsiniz.</li>
+    <li>Her trambolin için ayrı bir kart görünümüyle sayaç takibi yapılır.</li>
+    <li>Zamanlayıcıyı başlatabilir, durdurabilir veya sıfırlayabilirsiniz.</li>
+    <li>Her trambolin için toplam kaç kez başlatıldığı kaydedilir.</li>
+    <li>Başlatma sayısı sayfa kapanınca da korunur (localStorage).</li>
+    <li>Zaman dolduğunda sesli uyarı verir ve kart kırmızı yanıp söner.</li>
+    <li>Sayfa kapanıp açılsa bile geri sayım doğru şekilde devam eder.</li>
+    <li>Mobil uyumlu tasarım, tüm cihazlarda çalışır.</li>
+  </ul>
+
+  <h2>🛠️ Kullanım Adımları</h2>
+  <ul>
+    <li>Trambolin sayısını girin ve <strong>Oluştur</strong> butonuna tıklayın.</li>
+    <li>Her kartta <strong>Başlat</strong> ile sayaç başlar. Süre 10 dakikadır.</li>
+    <li><strong>Durdur</strong> ile sayacı geçici olarak durdurabilirsiniz.</li>
+    <li><strong>Sıfırla</strong> ile süreyi yeniden başlatmaya hazırlarsınız.</li>
+    <li>Başlatma sayısı her yeni başlatmada otomatik artar.</li>
+  </ul>
+
+  <h2>⚙️ Verileri Düzenleme</h2>
+  <p><strong>Verileri Düzenle</strong> butonu ile aşağıdaki işlemleri yapabilirsiniz:</p>
+  <ul>
+    <li>Her trambolin için başlatma sayısını +1 veya -1 olarak manuel değiştirin.</li>
+    <li>İsterseniz hepsini sıfırlayın (başlatma sayıları sıfırlanır).</li>
+    <li>Verileri <strong>JSON</strong> formatında dışa aktararak yedekleyin.</li>
+  </ul>
+
+  <h2>💾 Veriler Nerede Saklanır?</h2>
+  <ul>
+    <li>Veriler tarayıcının <strong>localStorage</strong> alanında saklanır.</li>
+    <li>Sayfa yenilense veya kapatılsa bile silinmez.</li>
+    <li>Kullanıcı tarayıcı verilerini temizlemedikçe korunur.</li>
+  </ul>
+
+  <h2>📲 Uygulama Gibi Kullanma (PWA)</h2>
+  <p>Bu uygulama <strong>Progressive Web App (PWA)</strong> desteklidir. Ana ekrana ekleyerek uygulama gibi kullanabilirsiniz:</p>
+
+  <h3>📱 iPhone:</h3>
+  <ul>
+    <li>Safari ile uygulamayı açın</li>
+    <li>Alt bardaki <strong>Paylaş</strong> (🔗) butonuna tıklayın</li>
+    <li><strong>Ana Ekrana Ekle</strong> seçeneğini seçin</li>
+  </ul>
+
+  <h3>📱 Android:</h3>
+  <ul>
+    <li>Chrome ile uygulamayı açın</li>
+    <li>Üç nokta menüsüne tıklayın</li>
+    <li><strong>Ana ekrana ekle</strong> veya <strong>Yükle</strong> seçeneğine basın</li>
+  </ul>
+
+  <p>Bu şekilde uygulama ikon gibi görünür, tam ekran çalışır ve internet olmadan bile kullanılabilir.</p>
+
+  <a href="index.html" class="back-button">⬅️ Uygulamaya Geri Dön</a>
+
+</body>
+</html>
